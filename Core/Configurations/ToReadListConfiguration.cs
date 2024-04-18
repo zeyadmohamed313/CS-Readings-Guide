@@ -14,6 +14,8 @@ namespace Core.Configurations
         public void Configure(EntityTypeBuilder<ToReadList> builder)
         {
             builder.HasKey(pk => pk.Id);
+            builder.Property(c => c.Id)
+            .ValueGeneratedOnAdd();
             builder.Property(p => p.AppUserId)
                 .IsRequired();
 

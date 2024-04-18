@@ -59,11 +59,7 @@ namespace CS_Readings_Guide.ErrorHandlingMiddleware
             // If development mode, include exception details
             if (_env.IsDevelopment())
             {
-                var feature = context.Features.Get<IExceptionHandlerFeature>();
-                if (feature != null)
-                {
-                    errorResponse.ExceptionDetails = feature.Error.ToString();
-                }
+                errorResponse.ExceptionDetails = exception.Message+"=>>"+exception.InnerException;
             }
 
             // Serialize the error response to JSON and write it to the response body

@@ -13,8 +13,9 @@ namespace Core.Configurations
     {
         public void Configure(EntityTypeBuilder<Note> builder)
         {
-            builder.HasKey(n => n.Id); 
-
+            builder.HasKey(n => n.Id);
+            builder.Property(c => c.Id)
+            .ValueGeneratedOnAdd();
             builder.Property(n => n.NoteContent)
                 .IsRequired(); // NoteContent is required
 

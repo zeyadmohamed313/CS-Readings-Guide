@@ -11,6 +11,7 @@ namespace Core
     {
         public IBookRepository bookRepository { get;}
         public ICategoryRepository categoryRepository { get; }
+        public IUserActivityRepository userActivityRepository { get; }
         public void commit();
     }
 }

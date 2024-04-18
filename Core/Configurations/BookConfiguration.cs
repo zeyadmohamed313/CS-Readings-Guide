@@ -16,6 +16,8 @@ namespace Core.Configurations
 
 
             builder.HasKey(c => c.Id);
+            builder.Property(c => c.Id)
+            .ValueGeneratedOnAdd();
             builder.Property(c => c.Title)
                 .IsRequired().HasMaxLength(20);
             builder.Property(c => c.Description)

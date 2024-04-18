@@ -1,4 +1,5 @@
-﻿using Core.Entites.Identity;
+﻿using Core;
+using Core.Entites.Identity;
 using Core.Generic.Repositories;
 using Core.Repositories;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,9 @@ namespace Repository
         {
             services.AddScoped<IUserActivityRepository, UserActivityRepository>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<IBookRepository, BookRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IUnitOfWork,UnitOfWork>();
 
             // Add services to the container.
             services.AddDbContext<AppDbContext>(options =>
@@ -31,6 +35,10 @@ namespace Repository
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+
+
+
             return services;
         }
     }

@@ -15,7 +15,9 @@ namespace Core.Configurations
             public void Configure(EntityTypeBuilder<FavouriteList> builder)
             {
                 builder.HasKey(pk => pk.Id);
-                builder.Property(p=>p.AppUserId)
+                builder.Property(c => c.Id)
+                .ValueGeneratedOnAdd();
+            builder.Property(p=>p.AppUserId)
                     .IsRequired();
 
                 builder.HasOne(u => u.AppUser)

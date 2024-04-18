@@ -2,9 +2,11 @@ using Core.Entites.Identity;
 using CS_Readings_Guide.ErrorHandlingMiddleware;
 using Microsoft.AspNetCore.Identity;
 using Repository;
+using Services;
 using Repository.Seeding;
 using Serilog;
 using System.Data;
+using CS_Readings_Guide.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,12 +16,16 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddRepoDependancies();
+builder.Services.AddRepoDependancies()
+            .AddServicesDependancies()
+            .AddApiDependancies();
 //Serilog Configure
 Log.Logger = new LoggerConfiguration()
               .ReadFrom.Configuration(builder.Configuration).CreateLogger();
 
 builder.Services.AddSerilog();
+
+
 
 var app = builder.Build();
 

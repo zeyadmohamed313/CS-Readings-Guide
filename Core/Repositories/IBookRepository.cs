@@ -10,5 +10,6 @@ namespace Core.Repositories
 {
     public interface IBookRepository:IGenericRepository<Book>
     {
+        public Task<List<Book>> GetBooksWithCategory(int CategoryId);
     }
 }

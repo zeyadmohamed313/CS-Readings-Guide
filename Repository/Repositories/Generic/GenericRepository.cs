@@ -16,25 +16,22 @@ namespace Repository.Repositories.Generic
         private readonly AppDbContext _appDbContext;
         #endregion
         #region Constructor
-        public GenericRepository(DbSet<T> dbset, AppDbContext appDbContext)
+        public GenericRepository(AppDbContext appDbContext)
         {
-           _dbSet = dbset;
+           _dbSet = appDbContext.Set<T>();
             _appDbContext = appDbContext;
         }
         #endregion
         #region HandleFunctions
         public async Task Add(T entity)
         {
-            _dbSet.Add(entity); 
-            await _appDbContext.SaveChangesAsync();
-           
+            _dbSet.Add(entity);            
         }
 
         public async Task DeleteAsync(int id)
         {
             var entity = await _dbSet.FindAsync(id);
             _dbSet.Remove(entity);
-            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task<List<T>> GetAllAsync()
@@ -51,8 +48,6 @@ namespace Repository.Repositories.Generic
         public async Task Update(T entity)
         {
             _dbSet.Update(entity);
-            await _appDbContext.SaveChangesAsync();
-
         }
         #endregion
     }

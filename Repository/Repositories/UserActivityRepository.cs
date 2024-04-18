@@ -16,13 +16,11 @@ namespace Repository.Repositories
     public class UserActivityRepository : IUserActivityRepository
     {
         #region Fields
-        private readonly UserManager<AppUser> _userManager;
         private readonly AppDbContext _dbContext;
         #endregion
         #region Constructor
-        public UserActivityRepository(UserManager<AppUser> userManager,AppDbContext appDbContext)
+        public UserActivityRepository(AppDbContext appDbContext)
         {
-            _userManager = userManager;
             _dbContext = appDbContext;
         }
         #endregion
@@ -123,24 +121,82 @@ namespace Repository.Repositories
             return "Success";
         }
 
-        public async Task<string> AddNoteToBook(string UserId, int NoteId)
+        public async Task<string> AddNoteToBook(string UserId, Note note)
         {
             // Getting the User With The Given ID
             var User = await _dbContext.Users.Include(n=>n.Notes).FirstOrDefaultAsync(i=>i.Id==UserId);
 
-            // Getting The Note With The Given ID
-            var Note = await _dbContext.Notes.FirstOrDefaultAsync(i=>i.Id==NoteId);
 
             // Checking Values 
             if (User == null) return "User Is Not Found";
-            if (Note == null) return "Note Is Not Found";
+            if (note == null) return "Note Is Not Found";
 
             //Adding 
-            User.Notes.Add(Note);
+            User.Notes.Add(note);
             // Save Changes
             await _dbContext.SaveChangesAsync();
 
             return "Success";
+        }
+
+        public async Task<List<Book>> GetCurrentlyReadingList(string UserId)
+        {
+            // Getting List for This User
+            var Clr = await _dbContext.CurrentlyReadingLists.
+                Include(b=>b.Books)
+                .FirstOrDefaultAsync(i=>i.AppUserId==UserId);
+
+            // Checking For The Value
+            if (Clr == null)
+                   return null;
+
+
+            return Clr.Books;
+        }
+
+        public async Task<List<Book>> GetFavouriteList(string UserId)
+        {
+            // Getting List for This User
+            var Clr = await _dbContext.FavouriteLists.
+                Include(b => b.Books)
+                .FirstOrDefaultAsync(i => i.AppUserId == UserId);
+
+            // Checking For The Value
+            if (Clr == null)
+                return null;
+
+
+            return Clr.Books;
+        }
+
+        public async Task<List<Book>> GetReadList(string UserId)
+        {
+            // Getting List for This User
+            var Clr = await _dbContext.ReadLists.
+                Include(b => b.Books)
+                .FirstOrDefaultAsync(i => i.AppUserId == UserId);
+
+            // Checking For The Value
+            if (Clr == null)
+                return null;
+
+
+            return Clr.Books;
+        }
+
+        public async Task<List<Book>> GetToReadList(string UserId)
+        {
+            // Getting List for This User
+            var Clr = await _dbContext.ToReadLists.
+                Include(b => b.Books)
+                .FirstOrDefaultAsync(i => i.AppUserId == UserId);
+
+            // Checking For The Value
+            if (Clr == null)
+                return null;
+
+
+            return Clr.Books;
         }
 
         public async Task<string> RemoveBookFromCurrentlyReadingList(string UserId, int BookId)

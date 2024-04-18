@@ -13,7 +13,9 @@ namespace Core.Configurations
     {
         public void Configure(EntityTypeBuilder<AppUser> builder)
         {
-            builder.HasKey(u => u.Id); 
+            builder.HasKey(u => u.Id);
+            builder.Property(c => c.Id)
+            .ValueGeneratedOnAdd();
 
             builder.Property(u => u.UserName)
                 .IsRequired(); 

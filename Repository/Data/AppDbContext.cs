@@ -56,6 +56,7 @@ namespace Repository.Data
         public DbSet<CurrentlyReadingList> CurrentlyReadingLists { get; set; }
         public DbSet<ToReadList> ToReadLists { get; set; }
         public DbSet<ReadList> ReadLists { get; set; }
+        public DbSet<FavouriteList> FavouriteLists { get; set;}
 
         #endregion
 
