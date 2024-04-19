@@ -34,8 +34,8 @@ using (var scope = app.Services.CreateScope())// to deal with it as scoped not s
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    //await RoleSeeder.SeedAsync(roleManager);
-    //await UserSeeder.SeedAsync(userManager);
+    await RoleSeeder.SeedAsync(roleManager);
+    await UserSeeder.SeedAsync(userManager);
 }
 
 // Configure the HTTP request pipeline.
