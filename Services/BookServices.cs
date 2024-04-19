@@ -31,7 +31,7 @@ namespace Services
             _mapper = mapper;
         }
         #endregion
-        public async Task<ApiResponse<string>> AddBook(BookDto book)
+        public async Task<ApiResponse<string>> AddBook(BookDtoWithOutId book)
         {
             // Checking for the book 
             if(book == null)
@@ -56,6 +56,7 @@ namespace Services
                 return BadRequest<string>("This Book Is Not Found");
 
             await _unitOfWork.bookRepository.DeleteAsync(BookId);
+            _unitOfWork.commit();
 
             return Success<string>("Deletion Done Successfully");
         }
@@ -64,7 +65,6 @@ namespace Services
         {
             var cacheKey = "GetAllBook";
             var cachedBooks = await _distributedCache.GetStringAsync(cacheKey);
-
             if (cachedBooks != null)
             {
                 // Books found in cache, deserialize and return
@@ -143,6 +143,7 @@ namespace Services
             // Mapping 
             var mapping = _mapper.Map<Book>(book);
             await _unitOfWork.bookRepository.Update(mapping);
+            _unitOfWork.commit();
             return Success("Updated Successfully");
         }
     }

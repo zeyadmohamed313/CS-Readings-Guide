@@ -27,11 +27,15 @@ namespace Core.Configurations
                 .IsRequired(); 
 
             builder.Property(u => u.LastName)
-                .IsRequired(); 
+                .IsRequired();
+
+        
 
 
-          
-                
+
+
+
+
             builder.HasMany(n => n.Notes)
                 .WithOne(n => n.User)
                 .HasForeignKey(n => n.UserId)

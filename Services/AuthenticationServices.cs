@@ -12,6 +12,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Core.Dtos;
+using AutoMapper;
+using Core.Repositories;
 
 namespace Services
 {
@@ -19,14 +22,25 @@ namespace Services
     {
         #region Fields
         private readonly IConfiguration _configuration;
-        UserManager<AppUser> _userManager;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
+        private readonly IUserActivityRepository _userActivityRepository;
+        private readonly IMapper _mapper;
+        private readonly RoleManager<IdentityRole> _roleManager;
         #endregion
 
         #region Constructor
-        public AuthenticationServices(IConfiguration configuration,UserManager<AppUser> userManager)
+        public AuthenticationServices(IConfiguration configuration,
+            UserManager<AppUser> userManager, IMapper mapper,
+            SignInManager<AppUser> signInManager
+            ,IUserActivityRepository userActivityRepository, RoleManager<IdentityRole> roleManager)
         {
-            _configuration = configuration;   
+            _configuration = configuration;
             _userManager = userManager;
+            _mapper = mapper;
+            _signInManager = signInManager;
+            _userActivityRepository = userActivityRepository;
+            _roleManager = roleManager;
         }
         #endregion
 
@@ -37,9 +51,10 @@ namespace Services
         public async Task<ApiResponse<string>> Login(string email, string password)
         {
             //Check for the email
-            var user = await _userManager.FindByNameAsync(email);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
                 return BadRequest<string>("Email Is Not Found");
+
 
 
             // Check Password
@@ -55,11 +70,17 @@ namespace Services
 
 
 
-        public async Task<ApiResponse<string>> Register(AppUser user, string password)
+        public async Task<ApiResponse<string>> Register(UserDto user, string password)
         {
-            // Trying To Create User
-            var result = await _userManager.CreateAsync(user, password);
+            if (user == null || string.IsNullOrEmpty(password))
+                return BadRequest<string>("Cannot insert Empty Vale=ue");
 
+            // Mapping 
+            var rluser = _mapper.Map<AppUser>(user);
+
+            // Trying To Create User
+            var result = await _userManager.CreateAsync(rluser, password);
+            await _userManager.AddToRoleAsync(rluser,"User");
             // Creation Feild
             if (!result.Succeeded)
             {
@@ -68,15 +89,26 @@ namespace Services
                 return BadRequest<string>(errorMessage);
             }
 
+
+
+            await _userActivityRepository.AddUserLists(rluser);
+
             // Success
             return Success("Registerd Successfully");
         }
 
-
-        public async Task<ApiResponse<string>> ChangePassword(AppUser user, string oldpassword,string newpassword)
+        public async Task<ApiResponse<string>> ChangePassword(string email, string oldpassword,string newpassword)
         {
+            //Check for the email
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+                return BadRequest<string>("Email Is Not Found");
+
+            // Mapping 
+            var rluser = _mapper.Map<AppUser>(user);
             // Attempt to change the password
-            var result = await _userManager.ChangePasswordAsync(user, oldpassword, newpassword);
+            var result = await _userManager.ChangePasswordAsync(rluser, oldpassword, newpassword);
 
             // Check If The Process Successed
             if (!result.Succeeded)
@@ -98,6 +130,7 @@ namespace Services
             var claims = new List<Claim>();
             claims.Add(new Claim(ClaimTypes.Name, user.UserName));
             claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id));
+
             claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
 
             SecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));

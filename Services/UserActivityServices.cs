@@ -1,4 +1,6 @@
-﻿using Core;
+﻿using AutoMapper;
+using Core;
+using Core.Dtos;
 using Core.Entites;
 using Core.ResponseSchema;
 using Core.Services;
@@ -21,15 +23,17 @@ namespace Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDistributedCache _cache;
+        private readonly IMapper _mapper;
         #endregion
 
         #region Constructor
         public UserActivityServices(IHttpContextAccessor httpContextAccessor ,
-            IUnitOfWork unitOfWork, IDistributedCache cache)
+            IUnitOfWork unitOfWork, IDistributedCache cache,IMapper mapper)
         {
             _httpContextAccessor = httpContextAccessor;
             _unitOfWork = unitOfWork;
             _cache = cache;
+            _mapper = mapper;
         }
         #endregion
 
@@ -56,9 +60,9 @@ namespace Services
 
             // Try To Add book to the List
             var result = await _unitOfWork.userActivityRepository.AddBookToFavouriteList(userid, BookId);
-
+            _unitOfWork.commit();
             if (result != "Success")
-                return BadRequest<string>("Insertion Faild !");
+                return BadRequest<string>(result);
 
             return Success("Insertion Success");
         }
@@ -91,7 +95,7 @@ namespace Services
             return Success("Insertion Success");
         }
 
-        public async Task<ApiResponse<string>> AddNoteToBook(Note note)
+        public async Task<ApiResponse<string>> AddNoteToBook(NoteDto note)
         {
             // Get The Current UserId
             var userid = GetAuthenticatedUser();
@@ -100,8 +104,10 @@ namespace Services
             if (note == null)
                 return BadRequest<string>("Cannot Insert Empty Note");
 
+            var mapping = _mapper.Map<Note>(note);
+
             // Try To Add Note
-            var result = await _unitOfWork.userActivityRepository.AddNoteToBook(userid,note);
+            var result = await _unitOfWork.userActivityRepository.AddNoteToBook(userid,mapping);
 
             if (result != "Success")
                 return BadRequest<string>("Falied To Insert Note");
@@ -110,7 +116,7 @@ namespace Services
 
         }
 
-        public async Task<ApiResponse<List<Book>>> GetCurrentlyReadingList()
+        public async Task<ApiResponse<List<BookDto>>> GetCurrentlyReadingList()
         {
             // Get The Current UserId
             var userId = GetAuthenticatedUser();
@@ -118,11 +124,10 @@ namespace Services
             // Check cache for currently reading list based on user ID
             var cacheKey = $"CurrentlyReadingList:{userId}";
             var cachedList = await _cache.GetStringAsync(cacheKey);
-
             if (cachedList != null)
             {
                 // Currently reading list found in cache, deserialize and return
-                var currentlyReadingList = JsonConvert.DeserializeObject<List<Book>>(cachedList);
+                var currentlyReadingList = JsonConvert.DeserializeObject<List<BookDto>>(cachedList);
                 return Success(currentlyReadingList);
             }
             else
@@ -133,7 +138,7 @@ namespace Services
                 if (result == null)
                 {
                     // Currently reading list not found for the user
-                    return BadRequest<List<Book>>("This List Is Not Found");
+                    return BadRequest<List<BookDto>>("This List Is Not Found");
                 }
 
                 // Cache the currently reading list
@@ -144,7 +149,7 @@ namespace Services
             }
         }
 
-        public async Task<ApiResponse<List<Book>>> GetFavouriteList()
+        public async Task<ApiResponse<List<BookDto>>> GetFavouriteList()
         {
             // Get The Current UserId
             var userId = GetAuthenticatedUser();
@@ -152,11 +157,10 @@ namespace Services
             // Check cache for currently reading list based on user ID
             var cacheKey = $"FavouriteList:{userId}";
             var cachedList = await _cache.GetStringAsync(cacheKey);
-
             if (cachedList != null)
             {
                 // Currently reading list found in cache, deserialize and return
-                var FavouriteList = JsonConvert.DeserializeObject<List<Book>>(cachedList);
+                var FavouriteList = JsonConvert.DeserializeObject<List<BookDto>>(cachedList);
                 return Success(FavouriteList);
             }
             else
@@ -167,7 +171,7 @@ namespace Services
                 if (result == null)
                 {
                     // Currently reading list not found for the user
-                    return BadRequest<List<Book>>("This List Is Not Found");
+                    return BadRequest<List<BookDto>>("This List Is Not Found");
                 }
 
                 // Cache the currently reading list
@@ -178,7 +182,18 @@ namespace Services
             }
         }
 
-        public async Task<ApiResponse<List<Book>>> GetReadList()
+        public async Task<ApiResponse<List<NoteDto>>> GetNotes(int BookId)
+        {
+            //Get The Current User ID 
+            var userid = GetAuthenticatedUser();
+            var Notes = await _unitOfWork.userActivityRepository.GetAllNotes(userid,BookId);
+            if (Notes==null)
+                return BadRequest<List<NoteDto>>("There Is No Notes Here");
+
+            return Success(Notes);
+        }
+
+        public async Task<ApiResponse<List<BookDto>>> GetReadList()
         {
             // Get The Current UserId
             var userId = GetAuthenticatedUser();
@@ -186,11 +201,10 @@ namespace Services
             // Check cache for currently reading list based on user ID
             var cacheKey = $"ReadList:{userId}";
             var cachedList = await _cache.GetStringAsync(cacheKey);
-
             if (cachedList != null)
             {
                 // Currently reading list found in cache, deserialize and return
-                var ReadList = JsonConvert.DeserializeObject<List<Book>>(cachedList);
+                var ReadList = JsonConvert.DeserializeObject<List<BookDto>>(cachedList);
                 return Success(ReadList);
             }
             else
@@ -201,7 +215,7 @@ namespace Services
                 if (result == null)
                 {
                     // Currently reading list not found for the user
-                    return BadRequest<List<Book>>("This List Is Not Found");
+                    return BadRequest<List<BookDto>>("This List Is Not Found");
                 }
 
                 // Cache the currently reading list
@@ -212,7 +226,7 @@ namespace Services
             }
         }
 
-        public async Task<ApiResponse<List<Book>>> GetToReadList()
+        public async Task<ApiResponse<List<BookDto>>> GetToReadList()
         {
             // Get The Current UserId
             var userId = GetAuthenticatedUser();
@@ -220,11 +234,10 @@ namespace Services
             // Check cache for currently reading list based on user ID
             var cacheKey = $"ToReadList:{userId}";
             var cachedList = await _cache.GetStringAsync(cacheKey);
-
             if (cachedList != null)
             {
                 // Currently reading list found in cache, deserialize and return
-                var ToReadList = JsonConvert.DeserializeObject<List<Book>>(cachedList);
+                var ToReadList = JsonConvert.DeserializeObject<List<BookDto>>(cachedList);
                 return Success(ToReadList);
             }
             else
@@ -235,7 +248,7 @@ namespace Services
                 if (result == null)
                 {
                     // Currently reading list not found for the user
-                    return BadRequest<List<Book>>("This List Is Not Found");
+                    return BadRequest<List<BookDto>>("This List Is Not Found");
                 }
 
                 // Cache the currently reading list
@@ -302,7 +315,7 @@ namespace Services
             return Success("Deletion Success");
         }
 
-        public async Task<ApiResponse<string>> RemoveNoteToBook(int NoteId)
+        public async Task<ApiResponse<string>> RemoveNoteToBook(int BookId,int NoteId)
         {
             // Get The Current UserId
             var userid = GetAuthenticatedUser();
@@ -310,7 +323,7 @@ namespace Services
            
 
             // Try To Add Note
-            var result = await _unitOfWork.userActivityRepository.RemoveNoteToBook(userid, NoteId);
+            var result = await _unitOfWork.userActivityRepository.RemoveNoteToBook(userid,BookId, NoteId);
 
             if (result != "Success")
                 return BadRequest<string>("Falied To Insert Note");

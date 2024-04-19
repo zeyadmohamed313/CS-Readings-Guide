@@ -14,7 +14,7 @@ namespace Core.Services
         public Task<ApiResponse<List<BookDto>>> GetAllBook();
         public Task<ApiResponse<List<BookDto>>> GetBookWithOneCategory(int CategoryId);
         public Task<ApiResponse<BookDto>> GetBookById(int Id);
-        public Task<ApiResponse<string>> AddBook(BookDto book);
+        public Task<ApiResponse<string>> AddBook(BookDtoWithOutId book);
         public Task<ApiResponse<string>> UpdateBook(BookDto book);
         public Task<ApiResponse<string>> DeleteBook(int BookId);
 

@@ -1,8 +1,11 @@
-﻿using Core.Entites;
+﻿using AutoMapper;
+using Core.Dtos;
+using Core.Entites;
 using Core.Entites.Identity;
 using Core.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Repository.Data;
 using System;
 using System.Collections.Generic;
@@ -17,11 +20,13 @@ namespace Repository.Repositories
     {
         #region Fields
         private readonly AppDbContext _dbContext;
+        private readonly IMapper _mapper;
         #endregion
         #region Constructor
-        public UserActivityRepository(AppDbContext appDbContext)
+        public UserActivityRepository(AppDbContext appDbContext,IMapper mapper)
         {
             _dbContext = appDbContext;
+            _mapper = mapper;
         }
         #endregion
         #region HandleFunctions 
@@ -40,7 +45,8 @@ namespace Repository.Repositories
             // Checking Values
             if (Book == null) return "This Book Is Not Found";
             if (User == null) return "This User Is Not Found";
-
+            if (User.CurrentlyReadingList.Books.Contains(Book))
+                return "This Book Is Already Exsists";
             // Adding 
             User.CurrentlyReadingList.Books.Add(Book);
 
@@ -64,6 +70,8 @@ namespace Repository.Repositories
             // Checking Values
             if (Book == null) return "This Book Is Not Found";
             if (User == null) return "This User Is Not Found";
+            if(User.FavouriteList.Books.Contains(Book))
+                return "This Book Is Already Exsists";
 
             // Adding 
             User.FavouriteList.Books.Add(Book);
@@ -88,7 +96,8 @@ namespace Repository.Repositories
             // Checking Values
             if (Book == null) return "This Book Is Not Found";
             if (User == null) return "This User Is Not Found";
-
+            if (User.ReadList.Books.Contains(Book))
+                return "This Book Is Already Exsists";
             // Adding 
             User.ReadList.Books.Add(Book);
 
@@ -112,7 +121,8 @@ namespace Repository.Repositories
             // Checking Values
             if (Book == null) return "This Book Is Not Found";
             if (User == null) return "This User Is Not Found";
-
+            if (User.ToReadList.Books.Contains(Book))
+                return "This Book Is Already Exsists";
             // Adding 
             User.ToReadList.Books.Add(Book);
             // Save Changes
@@ -121,82 +131,111 @@ namespace Repository.Repositories
             return "Success";
         }
 
-        public async Task<string> AddNoteToBook(string UserId, Note note)
+        public async Task<string> AddNoteToBook(string UserId,Note note)
         {
             // Getting the User With The Given ID
             var User = await _dbContext.Users.Include(n=>n.Notes).FirstOrDefaultAsync(i=>i.Id==UserId);
-
+            var Bookk = await _dbContext.Books.Include(n=>n.Notes).FirstOrDefaultAsync(n=>n.Id==note.BookId);
 
             // Checking Values 
             if (User == null) return "User Is Not Found";
+            if (Bookk == null) return "User Is Not Found";
             if (note == null) return "Note Is Not Found";
-
+            note.BookId = note.BookId;
+            note.UserId = UserId;
             //Adding 
             User.Notes.Add(note);
+            Bookk.Notes.Add(note);
             // Save Changes
             await _dbContext.SaveChangesAsync();
 
             return "Success";
         }
 
-        public async Task<List<Book>> GetCurrentlyReadingList(string UserId)
+        public async Task AddUserLists(AppUser user)
+        {
+            // Get the User 
+            var newuser =  await _dbContext.Users
+                .Include(f=>f.FavouriteList)
+                .Include(clr=>clr.CurrentlyReadingList)
+                .Include(rd=>rd.ReadList)
+                .Include(trd=>trd.ToReadList)
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            // Assign  
+            newuser.FavouriteList = new FavouriteList() {AppUserId=user.Id};
+            newuser.CurrentlyReadingList = new CurrentlyReadingList() { AppUserId = user.Id };
+            newuser.ReadList = new ReadList() { AppUserId = user.Id };
+            newuser.ToReadList = new ToReadList() { AppUserId = user.Id };
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<NoteDto>> GetAllNotes(string UserId, int BookId)
+        {
+            // Get All Note In Common in User And Book
+            var Notes = await _dbContext.Notes.Where(u=>u.BookId==BookId&&u.UserId==UserId).ToListAsync();
+            var mapping = _mapper.Map<List<NoteDto>>(Notes);  
+            return mapping;
+        }
+
+        public async Task<List<BookDto>> GetCurrentlyReadingList(string UserId)
         {
             // Getting List for This User
             var Clr = await _dbContext.CurrentlyReadingLists.
                 Include(b=>b.Books)
                 .FirstOrDefaultAsync(i=>i.AppUserId==UserId);
 
-            // Checking For The Value
-            if (Clr == null)
-                   return null;
+            var OldBooks = Clr.Books;
+
+            var Books = _mapper.Map<List<BookDto>>(OldBooks);
 
 
-            return Clr.Books;
+            return Books;
         }
 
-        public async Task<List<Book>> GetFavouriteList(string UserId)
+        public async Task<List<BookDto>> GetFavouriteList(string UserId)
         {
             // Getting List for This User
             var Clr = await _dbContext.FavouriteLists.
                 Include(b => b.Books)
                 .FirstOrDefaultAsync(i => i.AppUserId == UserId);
 
-            // Checking For The Value
-            if (Clr == null)
-                return null;
+            var OldBooks = Clr.Books;
 
+            var Books = _mapper.Map<List<BookDto>>(OldBooks);
 
-            return Clr.Books;
+           
+            return Books;
         }
 
-        public async Task<List<Book>> GetReadList(string UserId)
+        public async Task<List<BookDto>> GetReadList(string UserId)
         {
             // Getting List for This User
             var Clr = await _dbContext.ReadLists.
                 Include(b => b.Books)
                 .FirstOrDefaultAsync(i => i.AppUserId == UserId);
 
-            // Checking For The Value
-            if (Clr == null)
-                return null;
+            var OldBooks = Clr.Books;
+
+            var Books = _mapper.Map<List<BookDto>>(OldBooks);
 
 
-            return Clr.Books;
+            return Books;
         }
 
-        public async Task<List<Book>> GetToReadList(string UserId)
+        public async Task<List<BookDto>> GetToReadList(string UserId)
         {
             // Getting List for This User
             var Clr = await _dbContext.ToReadLists.
                 Include(b => b.Books)
                 .FirstOrDefaultAsync(i => i.AppUserId == UserId);
 
-            // Checking For The Value
-            if (Clr == null)
-                return null;
+            var OldBooks = Clr.Books;
+
+            var Books = _mapper.Map<List<BookDto>>(OldBooks);
 
 
-            return Clr.Books;
+           return Books;
         }
 
         public async Task<string> RemoveBookFromCurrentlyReadingList(string UserId, int BookId)
@@ -307,20 +346,22 @@ namespace Repository.Repositories
             return "Success";
         }
 
-        public async Task<string> RemoveNoteToBook(string UserId, int NoteId)
+        public async Task<string> RemoveNoteToBook(string UserId,int BookId, int NoteId)
         {
             // Getting the User With The Given ID
             var User = await _dbContext.Users.Include(n => n.Notes).FirstOrDefaultAsync(i => i.Id == UserId);
-
+            var Book = await _dbContext.Books.Include(n => n.Notes).FirstOrDefaultAsync(i => i.Id == BookId);
             // Getting The Note With The Given ID
             var Note = await _dbContext.Notes.FirstOrDefaultAsync(i => i.Id == NoteId);
 
             // Checking Values 
             if (User == null) return "User Is Not Found";
+            if (Book == null) return "Book Is Not Found";
             if (Note == null) return "Note Is Not Found";
 
 
             //Adding 
+            Book.Notes.Remove(Note);
             User.Notes.Remove(Note);
             // Save Changes
             await _dbContext.SaveChangesAsync();

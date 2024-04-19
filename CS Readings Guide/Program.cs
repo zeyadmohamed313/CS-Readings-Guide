@@ -20,8 +20,8 @@ builder.Services.AddRepoDependancies()
             .AddServicesDependancies()
             .AddApiDependancies();
 //Serilog Configure
-Log.Logger = new LoggerConfiguration()
-              .ReadFrom.Configuration(builder.Configuration).CreateLogger();
+//Log.Logger = new LoggerConfiguration()
+  //            .ReadFrom.Configuration(builder.Configuration).CreateLogger();
 
 builder.Services.AddSerilog();
 
@@ -34,8 +34,8 @@ using (var scope = app.Services.CreateScope())// to deal with it as scoped not s
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await RoleSeeder.SeedAsync(roleManager);
-    await UserSeeder.SeedAsync(userManager);
+    //await RoleSeeder.SeedAsync(roleManager);
+    //await UserSeeder.SeedAsync(userManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -44,12 +44,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
 
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

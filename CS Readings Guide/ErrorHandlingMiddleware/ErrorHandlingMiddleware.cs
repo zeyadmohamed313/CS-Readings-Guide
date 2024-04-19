@@ -31,7 +31,7 @@ namespace CS_Readings_Guide.ErrorHandlingMiddleware
             catch (Exception ex)
             {
                 // Logging the execption into the Database
-                Log.Error(ex, ex.Message, context.Request, "");
+                //Log.Error(ex, ex.Message, context.Request, "");
                 await HandleExceptionAsync(context, ex,_env);
             }
         }

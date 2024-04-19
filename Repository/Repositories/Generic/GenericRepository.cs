@@ -1,4 +1,5 @@
-﻿using Core.Generic.Repositories;
+﻿using Core.Entites;
+using Core.Generic.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Repository.Data;
 using System;
@@ -25,7 +26,7 @@ namespace Repository.Repositories.Generic
         #region HandleFunctions
         public async Task Add(T entity)
         {
-            _dbSet.Add(entity);            
+            _dbSet.Add(entity);
         }
 
         public async Task DeleteAsync(int id)

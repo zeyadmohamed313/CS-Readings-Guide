@@ -22,6 +22,7 @@ namespace Services
             services.AddScoped<IBookServices,BookServices>();
             services.AddScoped<ICategoryServices, CategoryServices>();
             services.AddScoped<IUserActivityServices, UserActivityServices>();
+            services.AddScoped<IAuthenticationServices, AuthenticationServices>();
             services.AddAutoMapper(typeof(MappingProfile));
 
             return services;

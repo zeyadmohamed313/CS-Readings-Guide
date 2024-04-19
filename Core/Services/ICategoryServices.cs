@@ -1,4 +1,5 @@
-﻿using Core.Entites;
+﻿using Core.Dtos;
+using Core.Entites;
 using Core.ResponseSchema;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,12 @@ namespace Core.Services
 {
     public interface ICategoryServices
     {
-        public Task<ApiResponse<List<Category>>> GetAllCategories();
+        public Task<ApiResponse<List<CategoryDto>>> GetAllCategories();
 
-        public Task<ApiResponse<string>> AddCategory(Category category);
-        public Task<ApiResponse<string>> UpdateCategory(Category category);
+        public Task<ApiResponse<string>> AddCategory(CategoryDtoWithOutId category);
+        public Task<ApiResponse<string>> UpdateCategory(CategoryDto category);
+        public Task<ApiResponse<CategoryDto>> GetCategoryById(int Id);
+
         public Task<ApiResponse<string>> DeleteCategory(int CategoryId);
     }
 }

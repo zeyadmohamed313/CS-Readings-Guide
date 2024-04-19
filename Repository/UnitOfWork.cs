@@ -1,4 +1,5 @@
-﻿using Core;
+﻿using AutoMapper;
+using Core;
 using Core.Entites;
 using Core.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -23,18 +24,18 @@ namespace Repository
         private readonly AppDbContext _appDbContext;
         private readonly DbSet<Book> _books;
         private readonly DbSet<Category> _categories;
-
+        private readonly IMapper _mapper;
         #endregion
 
         #region Constructor 
-        public UnitOfWork(AppDbContext appDbContext)
+        public UnitOfWork(AppDbContext appDbContext,IMapper mapper)
         {
             _appDbContext = appDbContext;
-        
+            _mapper = mapper;
 
             bookRepository = new BookRepository(_appDbContext);
             categoryRepository = new CategoryRepository(_appDbContext);
-            userActivityRepository = new UserActivityRepository(_appDbContext);
+            userActivityRepository = new UserActivityRepository(_appDbContext,_mapper);
         }
         #endregion
 

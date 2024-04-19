@@ -4,6 +4,7 @@ using Core.Entites;
 using Core.Services;
 using CS_Readings_Guide.Base;
 using CS_Readings_Guide.Router;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -27,6 +28,7 @@ namespace CS_Readings_Guide.Controllers
         #endregion
 
         #region Actions 
+        [Authorize]
         [HttpGet]
         [Route(RoutingSchema.BookRouting.GetAllBooks)]
         [SwaggerOperation(Summary = "عرض كل الكتب", OperationId = "GetAllBook")]
@@ -48,11 +50,28 @@ namespace CS_Readings_Guide.Controllers
         [HttpPost]
         [Route(RoutingSchema.BookRouting.AddBook)]
         [SwaggerOperation(Summary = "اضافة كتاب جديد", OperationId = "AddBook")]
-        public async Task<IActionResult> AddBook(BookDto book)
+        public async Task<IActionResult> AddBook(BookDtoWithOutId book)
         {
             var result  = await _bookServices.AddBook(book);
             return NewResult(result);
         }
+        [HttpPut]
+        [Route(RoutingSchema.BookRouting.UpdateBook)]
+        [SwaggerOperation(Summary = "تعديل كتاب ", OperationId = "UpdateBook")]
+        public async Task<IActionResult> UpdateBook(BookDto book)
+        {
+            var result = await _bookServices.UpdateBook(book);
+            return NewResult(result);
+        }
+        [HttpDelete]
+        [Route(RoutingSchema.BookRouting.Delete)]
+        [SwaggerOperation(Summary = "حذف كتاب ", OperationId = "DeleteBook")]
+        public async Task<IActionResult> DeleteBook([FromRoute]int Id)
+        {
+            var result = await _bookServices.DeleteBook(Id);
+            return NewResult(result);
+        }
+
 
         #endregion
     }

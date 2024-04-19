@@ -12,6 +12,8 @@ namespace Core.Entites.Identity
     {
         public string FirstName {  get; set; }
         public string LastName { get; set; }
+        public string Address { get; set; } 
+
         public FavouriteList FavouriteList { get; set; }
         public ToReadList ToReadList { get; set; }
         public ReadList ReadList { get; set; }
